@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Instacat — Живая соцсеть | Аватарки эмодзи + Google</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        :root {
+            --bg: #f9f5ff;
+            --surface: #ffffff;
+            --text: #1e1a2f;
+            --text-secondary: #7d66ae;
+            --primary: #9b4dff;
+            --primary-dark: #7c3aed;
+            --border: #e9d9ff;
+            --danger: #e74c3c;
+            --success: #27ae60;
+        }
+        body { background: var(--bg); padding-bottom: 70px; }
+        
+        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(145deg, #e9defa, #d6c5f0); padding: 20px; position: fixed; inset: 0; z-index: 1000; overflow-y: auto; }
+        .auth-card { background: var(--surface); border-radius: 48px; padding: 40px 32px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .logo-big { font-size: 52px; font-weight: 800; background: linear-gradient(135deg, #9b4dff, #c462ff); -webkit-background-clip: text; background-clip: text; color: transparent; text-align: center; margin-bottom: 24px; }
+        .input-field { width: 100%; padding: 14px 18px; border: 2px solid var(--border); border-radius: 44px; margin-top: 12px; outline: none; background: var(--surface); }
+        .btn { width: 100%; padding: 14px 24px; border-radius: 44px; font-weight: 600; cursor: pointer; border: none; margin-top: 16px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .hidden { display: none !important; }
+        
+        .app-container { max-width: 600px; margin: 0 auto; }
+        .navbar { background: var(--surface); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); background: rgba(255,255,255,0.95); }
+        .logo { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #9b4dff, #c462ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .avatar-emoji { 
+            font-size: 28px; 
+            width: 44px; 
+            height: 44px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: var(--bg); 
+            border-radius: 50%; 
+            border: 2px solid var(--primary);
+            overflow: hidden;
+        }
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .badge { background: linear-gradient(135deg, gold, #ffaa00); padding: 4px 12px; border-radius: 40px; font-weight: bold; color: #333; font-size: 13px; }
+        .create-card { background: var(--surface); margin: 16px; border-radius: 28px; padding: 16px; display: flex; gap: 12px; }
+        .caption-input { flex: 1; padding: 12px 18px; border-radius: 40px; border: 1px solid var(--border); background: var(--bg); outline: none; }
+        .post-card { background: var(--surface); margin: 16px; border-radius: 28px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .post-header { padding: 14px 16px; display: flex; justify-content: space-between; }
+        .post-user { display: flex; gap: 12px; align-items: center; }
+        .post-avatar { 
+            font-size: 32px; 
+            width: 44px; 
+            height: 44px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: var(--bg); 
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .post-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .post-actions { padding: 12px 16px; }
+        .action-icons { display: flex; gap: 24px; font-size: 26px; margin-bottom: 10px; }
+        .action-icon { cursor: pointer; }
+        .comment-section { border-top: 1px solid var(--border); padding: 12px; margin-top: 8px; }
+        .comment-input { display: flex; gap: 8px; margin-top: 10px; }
+        .comment-input input { flex: 1; padding: 10px 14px; border-radius: 40px; border: 1px solid var(--border); background: var(--bg); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; justify-content: space-around; padding: 12px 20px 22px; border-top: 1px solid var(--border); backdrop-filter: blur(10px); background: rgba(255,255,255,0.96); }
+        .nav-item { font-size: 26px; color: var(--text-secondary); cursor: pointer; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 12px 24px; border-radius: 40px; z-index: 2000; }
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .emoji-option { font-size: 40px; cursor: pointer; display: inline-block; padding: 8px; transition: 0.1s; border-radius: 50%; }
+        .emoji-option:hover { background: var(--bg); transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+<div id="authContainer" class="auth-container">
+    <div class="auth-card">
+        <div class="logo-big">🐱 Instacat 💜</div>
+        <div id="loginForm">
+            <input type="text" id="loginUsername" class="input-field" placeholder="Логин или Email">
+            <input type="password" id="loginPassword" class="input-field" placeholder="Пароль">
+            <button id="doLogin" class="btn btn-primary">🔓 Войти</button>
+            <button id="showRegisterBtn" class="btn btn-outline">📝 Создать аккаунт</button>
+            <button id="googleLoginBtn" class="btn btn-primary" style="background:#4285F4;">🅶 Войти через Google</button>
+            <button id="anonymousLoginBtn" class="btn btn-outline">👤 Анонимный вход</button>
+        </div>
+        <div id="registerForm" class="hidden">
+            <input type="text" id="regUsername" class="input-field" placeholder="Логин">
+            <input type="email" id="regEmail" class="input-field" placeholder="Email">
+            <input type="text" id="regName" class="input-field" placeholder="Имя">
+            <input type="password" id="regPassword" class="input-field" placeholder="Пароль (≥6)">
+            <input type="password" id="regPasswordConfirm" class="input-field" placeholder="Повторите пароль">
+            <div style="margin:16px 0; text-align:center;">
+                <p style="margin-bottom:8px;">Выберите аватар-эмодзи:</p>
+                <div>
+                    <span class="emoji-option" data-emoji="🐱">🐱</span>
+                    <span class="emoji-option" data-emoji="😺">😺</span>
+                    <span class="emoji-option" data-emoji="🐈">🐈</span>
+                    <span class="emoji-option" data-emoji="🐶">🐶</span>
+                    <span class="emoji-option" data-emoji="😸">😸</span>
+                    <span class="emoji-option" data-emoji="🐾">🐾</span>
+                    <span class="emoji-option" data-emoji="🌟">🌟</span>
+                    <span class="emoji-option" data-emoji="💜">💜</span>
+                    <span class="emoji-option" data-emoji="🎭">🎭</span>
+                </div>
+                <div id="selectedEmojiDisplay" style="font-size:48px; margin-top:8px;">🐱</div>
+                <input type="hidden" id="selectedEmoji" value="🐱">
+            </div>
+            <button id="doRegister" class="btn btn-primary">✅ Зарегистрироваться</button>
+            <button id="showLoginBtn" class="btn btn-outline">← Назад</button>
+        </div>
+    </div>
+</div>
+
+<div id="appContainer" class="app-container hidden">
+    <div class="navbar">
+        <div class="logo">Instacat 🐾</div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <div id="coinDisplay" class="badge">⭐ 0</div>
+            <div id="navAvatar" class="avatar-emoji">🐱</div>
+            <i id="logoutIcon" class="fas fa-sign-out-alt" style="font-size:20px; cursor:pointer;"></i>
+        </div>
+    </div>
+    <div id="createPostCard" class="create-card">
+        <input type="text" id="postCaption" class="caption-input" placeholder="Что нового? #instacat">
+        <button id="publishPostBtn" class="btn btn-primary" style="width:auto; padding:10px 20px;">Опубликовать</button>
+    </div>
+    <div id="feedContainer"><div class="loading"><i class="fas fa-spinner fa-pulse"></i> Загрузка...</div></div>
+    <div class="bottom-nav">
+        <div class="nav-item" id="homeNav"><i class="fas fa-home"></i></div>
+        <div class="nav-item" id="profileNav"><i class="fas fa-user"></i></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut, signInAnonymously, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc, arrayUnion, arrayRemove, onSnapshot, Timestamp, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+    // ТВОЙ КОНФИГ
+    const firebaseConfig = {
+        apiKey: "AIzaSyAi7MgQbIgqraKp1HnuPDwOAcm3B5y50oo",
+        authDomain: "instacat-8ac19.firebaseapp.com",
+        projectId: "instacat-8ac19",
+        storageBucket: "instacat-8ac19.firebasestorage.app",
+        messagingSenderId: "1055379017127",
+        appId: "1:1055379017127:web:3e4ce3fc4dd2875113fa82"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+    
+    let currentUser = null;
+    let isAnonymous = false;
+    let unsubscribeFeed = null;
+    
+    function showToast(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = msg;
+        toast.style.backgroundColor = isError ? '#e74c3c' : 'var(--primary)';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    function formatAvatar(photoURL, displayName) {
+        if (photoURL && photoURL.startsWith('http')) {
+            return { type: 'image', value: photoURL };
+        }
+        return { type: 'emoji', value: photoURL || "🐱" };
+    }
+    
+    async function getUserData(uid) {
+        const snap = await getDoc(doc(db, "users", uid));
+        return snap.exists() ? snap.data() : null;
+    }
+    
+    async function updateStars(uid, amount) {
+        if (isAnonymous) return;
+        const userRef = doc(db, "users", uid);
+        const userData = await getUserData(uid);
+        const currentStars = userData?.stars || 0;
+        await setDoc(userRef, { stars: currentStars + amount }, { merge: true });
+        if (currentUser && currentUser.uid === uid) {
+            document.getElementById('coinDisplay').innerHTML = `⭐ ${currentStars + amount}`;
+        }
+    }
+    
+    async function toggleLike(postId, postOwnerId, currentLikes) {
+        if (isAnonymous) { showToast("Аноним: нельзя лайкать", true); return; }
+        if (postOwnerId === currentUser.uid) { showToast("Нельзя лайкать свои посты", true); return; }
+        const postRef = doc(db, "posts", postId);
+        const isLiked = currentLikes.includes(currentUser.uid);
+        if (isLiked) {
+            await updateDoc(postRef, { likes: arrayRemove(currentUser.uid), likeCount: currentLikes.length - 1 });
+        } else {
+            await updateDoc(postRef, { likes: arrayUnion(currentUser.uid), likeCount: currentLikes.length + 1 });
+            await updateStars(currentUser.uid, 1);
+        }
+    }
+    
+    async function addComment(postId, text) {
+        if (isAnonymous) { showToast("Аноним: нельзя комментировать", true); return; }
+        if (!text.trim()) return;
+        await addDoc(collection(db, `posts/${postId}/comments`), {
+            userId: currentUser.uid, userName: currentUser.displayName, userAvatar: currentUser.photoURL || "🐱",
+            text: text.trim(), createdAt: Timestamp.now()
+        });
+    }
+    
+    async function deletePost(postId, ownerId) {
+        if (currentUser.uid !== ownerId) { showToast("Нет прав", true); return; }
+        await deleteDoc(doc(db, "posts", postId));
+        showToast("Пост удалён");
+    }
+    
+    function formatTimeAgo(date) {
+        if (!date) return "только что";
+        const seconds = Math.floor((Date.now() - date.toDate()) / 1000);
+        if (seconds < 60) return `${seconds} сек`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} мин`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} ч`;
+        return `${Math.floor(seconds / 86400)} дн`;
+    }
+    
+    function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]) || ''; }
+    
+    function renderAvatar(avatar, size = 'post') {
+        if (avatar && avatar.startsWith('http')) {
+            const className = size === 'nav' ? 'avatar-img' : 'post-avatar-img';
+            return `<img class="${className}" src="${avatar}" alt="avatar">`;
+        }
+        const emoji = avatar || "🐱";
+        if (size === 'nav') return `<div class="avatar-emoji" style="font-size:28px;">${emoji}</div>`;
+        return `<div class="post-avatar" style="font-size:32px;">${emoji}</div>`;
+    }
+    
+    function renderPost(post, postId) {
+        const div = document.createElement('div');
+        div.className = 'post-card';
+        const isLiked = post.likes?.includes(currentUser?.uid) || false;
+        const isOwner = currentUser?.uid === post.userId;
+        
+        div.innerHTML = `
+            <div class="post-header">
+                <div class="post-user">
+                    ${renderAvatar(post.userAvatar, 'post')}
+                    <div><strong>${escapeHtml(post.userName)}</strong><div style="font-size:11px;">${formatTimeAgo(post.createdAt)}</div></div>
+                </div>
+                <div>${isOwner ? `<i class="fas fa-trash delete-post" data-id="${postId}" style="color:var(--danger); cursor:pointer;"></i>` : ''}</div>
+            </div>
+            <div style="padding:0 16px 8px 16px;"><strong>${escapeHtml(post.userName)}</strong> ${escapeHtml(post.caption || '')}</div>
+            <div class="post-actions">
+                <div class="action-icons">
+                    <div class="action-icon like-icon" data-id="${postId}"><i class="${isLiked ? 'fas fa-heart' : 'far fa-heart'}" style="color:${isLiked ? '#e84393' : ''}"></i></div>
+                    <div class="action-icon comment-toggle" data-id="${postId}"><i class="far fa-comment"></i></div>
+                </div>
+                <div><strong>${post.likeCount || 0} ❤️</strong></div>
+                <div id="comments-${postId}" class="comment-section hidden">
+                    <div id="commentsList-${postId}"></div>
+                    <div class="comment-input"><input id="commentInput-${postId}" placeholder="Комментарий..."><button class="send-comment" data-id="${postId}">→</button></div>
+                </div>
+            </div>
+        `;
+        
+        div.querySelector('.like-icon')?.addEventListener('click', () => toggleLike(postId, post.userId, post.likes || []));
+        div.querySelector('.delete-post')?.addEventListener('click', () => { if(confirm("Удалить?")) deletePost(postId, post.userId); });
+        div.querySelector('.comment-toggle')?.addEventListener('click', async () => {
+            const commentsDiv = div.querySelector(`#comments-${postId}`);
+            commentsDiv.classList.toggle('hidden');
+            if (!commentsDiv.classList.contains('hidden')) {
+                const commentsSnap = await getDocs(query(collection(db, `posts/${postId}/comments`), orderBy("createdAt", "desc")));
+                const list = div.querySelector(`#commentsList-${postId}`);
+                list.innerHTML = '';
+                commentsSnap.forEach(c => {
+                    const data = c.data();
+                    list.innerHTML += `<div><strong>${escapeHtml(data.userName)}</strong> ${escapeHtml(data.text)}</div>`;
+                });
+            }
+        });
+        div.querySelector('.send-comment')?.addEventListener('click', async () => {
+            const input = div.querySelector(`#commentInput-${postId}`);
+            await addComment(postId, input.value);
+            input.value = '';
+            div.querySelector('.comment-toggle').click();
+            div.querySelector('.comment-toggle').click();
+        });
+        return div;
+    }
+    
+    function subscribeToFeed() {
+        if (unsubscribeFeed) unsubscribeFeed();
+        const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+        unsubscribeFeed = onSnapshot(q, (snapshot) => {
+            if (snapshot.empty) {
+                feedContainer.innerHTML = '<div class="loading">🐱 Нет постов. Будьте первым!</div>';
+                return;
+            }
+            feedContainer.innerHTML = '';
+            snapshot.forEach(docSnap => feedContainer.appendChild(renderPost({ id: docSnap.id, ...docSnap.data() }, docSnap.id)));
+        }, (error) => {
+            console.error("Ошибка ленты:", error);
+            feedContainer.innerHTML = '<div class="loading">❌ Ошибка загрузки. Проверьте правила Firebase</div>';
+        });
+    }
+    
+    async function createTestPostIfEmpty() {
+        const snapshot = await getDocs(collection(db, "posts"));
+        if (snapshot.empty) {
+            try {
+                await addDoc(collection(db, "posts"), {
+                    userId: "system",
+                    userName: "Instacat",
+                    userAvatar: "🐱",
+                    caption: "🎉 Добро пожаловать в Instacat! Тестовый пост. Регистрируйтесь и публикуйте! 💜",
+                    likes: [],
+                    likeCount: 0,
+                    createdAt: Timestamp.now()
+                });
+                console.log("Тестовый пост создан");
+            } catch(e) { console.log("Не удалось создать тестовый пост:", e); }
+        }
+    }
+    
+    async function publishPost() {
+        if (isAnonymous) { showToast("Аноним: нельзя публиковать", true); return; }
+        const caption = document.getElementById('postCaption').value;
+        if (!caption) { showToast("Напишите текст", true); return; }
+        await addDoc(collection(db, "posts"), {
+            userId: currentUser.uid,
+            userName: currentUser.displayName,
+            userAvatar: currentUser.photoURL || "🐱",
+            caption: caption,
+            likes: [],
+            likeCount: 0,
+            createdAt: Timestamp.now()
+        });
+        await updateStars(currentUser.uid, 10);
+        document.getElementById('postCaption').value = '';
+        showToast("Пост опубликован! +10 ⭐");
+    }
+    
+    let selectedEmoji = "🐱";
+    document.querySelectorAll('.emoji-option').forEach(el => {
+        el.addEventListener('click', () => {
+            selectedEmoji = el.dataset.emoji;
+            document.getElementById('selectedEmojiDisplay').innerHTML = selectedEmoji;
+            document.getElementById('selectedEmoji').value = selectedEmoji;
+        });
+    });
+    
+    document.getElementById('doRegister')?.addEventListener('click', async () => {
+        const username = document.getElementById('regUsername').value.trim().toLowerCase();
+        const email = document.getElementById('regEmail').value.trim();
+        const name = document.getElementById('regName').value.trim();
+        const pass = document.getElementById('regPassword').value;
+        const confirm = document.getElementById('regPasswordConfirm').value;
+        const avatarEmoji = document.getElementById('selectedEmoji').value;
+        if (!username || !email || !name || pass.length < 6) { showToast("Заполните все поля", true); return; }
+        if (pass !== confirm) { showToast("Пароли не совпадают", true); return; }
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, pass);
+            await updateProfile(cred.user, { displayName: name, photoURL: avatarEmoji });
+            await setDoc(doc(db, "users", cred.user.uid), { username, name, email, stars: 100, avatar: avatarEmoji, createdAt: Timestamp.now() });
+            showToast("Регистрация успешна! +100 ⭐");
+        } catch(e) { showToast(e.message, true); }
+    });
+    
+    document.getElementById('doLogin')?.addEventListener('click', async () => {
+        const loginInput = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        let email = loginInput;
+        if (!loginInput.includes('@')) {
+            const usersSnapshot = await getDocs(collection(db, "users"));
+            let found = null;
+            usersSnapshot.forEach(doc => { if (doc.data().username === loginInput.toLowerCase()) found = doc.data().email; });
+            if (found) email = found;
+            else { showToast("Пользователь не найден", true); return; }
+        }
+        try { await signInWithEmailAndPassword(auth, email, password); }
+        catch(e) { showToast(e.message, true); }
+    });
+    
+    document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            await setDoc(doc(db, "users", user.uid), {
+                username: user.email.split('@')[0],
+                name: user.displayName,
+                email: user.email,
+                stars: 100,
+                avatar: user.photoURL,
+                createdAt: Timestamp.now()
+            }, { merge: true });
+            showToast("Вход через Google успешен! +100 ⭐");
+        } catch(e) { showToast(e.message, true); }
+    });
+    
+    document.getElementById('anonymousLoginBtn')?.addEventListener('click', async () => {
+        try { await signInAnonymously(auth); showToast("Анонимный вход"); }
+        catch(e) { showToast(e.message, true); }
+    });
+    
+    document.getElementById('showRegisterBtn')?.addEventListener('click', () => {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+    });
+    document.getElementById('showLoginBtn')?.addEventListener('click', () => {
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+    });
+    document.getElementById('logoutIcon')?.addEventListener('click', () => signOut(auth));
+    document.getElementById('publishPostBtn')?.addEventListener('click', publishPost);
+    document.getElementById('homeNav')?.addEventListener('click', () => window.scrollTo({top:0}));
+    document.getElementById('profileNav')?.addEventListener('click', async () => {
+        if (currentUser) {
+            const data = await getUserData(currentUser.uid);
+            showToast(`👤 ${currentUser.displayName} | ⭐ ${data?.stars || 0}`);
+        }
+    });
+    
+    const feedContainer = document.getElementById('feedContainer');
+    
+    onAuthStateChanged(auth, async (user) => {
+        if (user && !user.isAnonymous) {
+            currentUser = user; isAnonymous = false;
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            const avatar = user.photoURL || user.displayName?.charAt(0) || "🐱";
+            if (avatar.startsWith('http')) {
+                document.getElementById('navAvatar').innerHTML = `<img class="avatar-img" src="${avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+            } else {
+                document.getElementById('navAvatar').innerHTML = avatar;
+                document.getElementById('navAvatar').style.fontSize = '28px';
+            }
+            const data = await getUserData(user.uid);
+            document.getElementById('coinDisplay').innerHTML = `⭐ ${data?.stars || 0}`;
+            await createTestPostIfEmpty();
+            subscribeToFeed();
+            document.getElementById('createPostCard').style.display = 'flex';
+        } else if (user && user.isAnonymous) {
+            currentUser = user; isAnonymous = true;
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            document.getElementById('navAvatar').innerHTML = "👤";
+            document.getElementById('navAvatar').style.fontSize = '28px';
+            document.getElementById('coinDisplay').innerHTML = `👤 Аноним`;
+            await createTestPostIfEmpty();
+            subscribeToFeed();
+            document.getElementById('createPostCard').style.display = 'none';
+        } else {
+            if (unsubscribeFeed) unsubscribeFeed();
+            document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('appContainer').classList.add('hidden');
+        }
+    });
+</script>
+</body>
+</html>
